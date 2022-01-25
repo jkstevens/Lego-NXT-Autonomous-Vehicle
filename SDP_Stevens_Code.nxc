@@ -1,0 +1,81 @@
+int SensorCalibration(){
+    int difference = (Sensor(IN_2) - Sensor(IN_3)) / 2;
+    return difference                                  ;
+
+};
+
+bool Is_Dark(int input, int dark_border){
+     if (input < dark_border){
+     return true;}
+     else{
+     return false;}
+     }
+
+void move_forward(){
+OnFwd(OUT_AB, 70);
+Wait(250);
+Off(OUT_AB);}
+
+void execute_right_turn(){
+OnFwd(OUT_A, 70);
+OnRev(OUT_B, 40);
+Wait(400);
+Off(OUT_A);
+Off(OUT_B);        }
+
+void execute_left_turn(){
+OnFwd(OUT_B, 70);
+OnRev(OUT_A, 40);
+Wait(400);
+Off(OUT_A);
+Off(OUT_B);    }
+
+void has_sensor_detected(){
+     while(SensorUS(IN_1)<15);
+     Off(OUT_AB);}
+
+task main(){
+     SetSensorLight(IN_2);
+     SetSensorLight(IN_3);
+     SetSensorUltrasonic(IN_1);
+     TextOut(0, 0, "Cal Light?");
+     until(ButtonPressed(BTNCENTER, false)) Wait(100);
+     ClearScreen()                        ;
+     int difference = SensorCalibration();
+     int dark_border = Sensor(IN_3) + difference;
+     int light_border = Sensor(IN_2) - difference;
+     Wait(3000)                           ;
+     TextOut(0, 0, "Cal-ed. Proceed?");
+     until(ButtonPressed(BTNCENTER, false)) Wait(100);
+     ClearScreen()                             ;
+     NumOut(60, LCD_LINE2, dark_border);
+     NumOut(60, LCD_LINE3, light_border);
+     NumOut(60, LCD_LINE1, difference);
+     Wait(5000);
+     TextOut(0, 0, "Done. Start.");
+     until(ButtonPressed(BTNCENTER, false)) Wait(100);
+     ClearScreen();
+     int count_of_both_blacks = 0;
+     while (true) {
+     string is_dark_string = "Test" ;
+     NumOut(60, LCD_LINE1, difference);
+               NumOut(60, LCD_LINE2, dark_border);
+               NumOut(60, LCD_LINE3, Sensor(IN_3));
+               NumOut(60, LCD_LINE4, Sensor(IN_2));
+               NumOut(60, LCD_LINE5, count_of_both_blacks);
+               TextOut(0,0, is_dark_string);
+     bool is_right_dark = Is_Dark(Sensor(IN_3),dark_border);
+     bool is_left_dark   = Is_Dark(Sensor(IN_2),dark_border);
+     has_sensor_detected();
+          if (is_left_dark == false && is_right_dark == false) {
+          move_forward();}
+          else if(is_left_dark == true && is_right_dark == true){
+          move_forward();
+          count_of_both_blacks = count_of_both_blacks + 1;}
+          else if(is_left_dark == true && is_right_dark == false) {
+          execute_left_turn();}
+          else if (is_left_dark == false && is_right_dark == true) {
+          execute_right_turn();}
+     if (count_of_both_blacks > 2) { Off(OUT_AB); break;}
+          //else
+                                            }}
